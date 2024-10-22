@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 import csv
 
 # csv file name
-filename = "xsen_d2a.csv"
+filename = "d2a.csv"
 
-delta_t = 0.05
+f = 60
+delta_t = 1/f
 threadhold = 0.05
 
 packCounter = [] 
@@ -18,9 +19,17 @@ faccX = []
 faccY = [] 
 faccZ = []
 
+accX = []
+accY = [] 
+accZ = []
+
 velX = []
 velY = []
 velZ = []
+
+cur_accX = 0
+cur_accY = 0
+cur_accZ = 0
 
 cur_velX = 0
 cur_velY = 0
@@ -33,7 +42,12 @@ posZ = []
 cur_posX = 0
 cur_posY = 0
 cur_posZ = 0
-
+counter = 0
+step = f * 3
+counterX = 0
+counterY = 0
+counterZ = 0
+sample = 8
 # i = []
 
 # reading csv file
@@ -53,31 +67,73 @@ with open(filename, 'r') as csvfile:
         faccX.append(float(row[5]))
         faccY.append(float(row[6]))
         faccZ.append(float(row[7])-0.33)
+         
+        counter = counter+1
 
-        if abs(float(row[5])) <= threadhold:
+        if counter >= step:
+            if abs(float(row[5])) <= threadhold:
+                cur_accX = 0
+                counterX += 1
+            else:
+                cur_accX = float(row[5])
+                counterX = 0
+
+            accX.append(cur_accX)
+
+            if abs(float(row[6])) <= threadhold:
+                cur_accY = 0
+                counterY += 1
+            else:
+                cur_accY = float(row[6])
+                counterY = 0
+
+            accY.append(cur_accY)
+
+            if abs(float(row[7])-0.33) <= threadhold:
+                cur_accZ = 0
+                counterZ += 1
+            else: 
+                cur_accZ = (float(row[7])-0.33)
+                counterZ = 0
+
+            accZ.append(cur_accZ)
+
+
+        #     cur_posX += cur_velX*delta_t
+        #     cur_posY += cur_velY*delta_t
+        #     cur_posZ += cur_velZ*delta_t
+
+        #     posX.append(cur_posX)
+        #     posY.append(cur_posY)
+        #     posZ.append(cur_posZ)
+        else:
+            accX.append(0)
+            accY.append(0)
+            accZ.append(0)
+        #     velX.append(0)
+        #     velY.append(0)
+        #     velZ.append(0)
+        #     posX.append(0)
+        #     posY.append(0)
+        #     posZ.append(0)
+        if counterX >= sample:
             cur_velX = 0
-        else:
-            cur_velX += float(row[5])*delta_t
-        
-        velX.append(float(cur_velX))
-
-        if abs(float(row[6])) <= threadhold:
+        if counterY >= sample:
             cur_velY = 0
-        else:
-            cur_velY += float(row[6])*delta_t
-        
-        velY.append(float(cur_velY))
-        
-        if abs(float(row[7])-0.33) <= threadhold:
+        if counterZ >= sample:
             cur_velZ = 0
-        else:
-            cur_velZ += (float(row[7])-0.33)*delta_t
-        
-        velZ.append(float(cur_velZ))
 
-        cur_posX += cur_velX*delta_t
-        cur_posY += cur_velY*delta_t
-        cur_posZ += cur_velZ*delta_t
+        cur_velX += 0.5*cur_accX*delta_t
+        cur_velY += 0.5*cur_accY*delta_t
+        cur_velZ += 0.5*cur_accZ*delta_t
+
+        cur_posX += 0.5*cur_velX*delta_t
+        cur_posX += 0.5*cur_velX*delta_t
+        cur_posX += 0.5*cur_velX*delta_t
+
+        velX.append(cur_velX)
+        velY.append(cur_velY)
+        velZ.append(cur_velZ)
 
         posX.append(cur_posX)
         posY.append(cur_posY)
@@ -100,41 +156,44 @@ with open(filename, 'r') as csvfile:
 #     for col in row:
 #         print("%10s" % col, end=" "),
 #     print('\n')
+
+
 # figure, axis = plt.subplots(2, 2)
 
 
-# axis[0, 0].plot(packCounter, faccY, color = 'g',  
+# axis[0, 0].plot(packCounter, accX, color = 'g',  
 #          marker = 'o', label='Y')
 # axis[0, 0].set_title("facc")
 
 
-# axis[0, 1].plot(packCounter, velY, color = 'g',  
+# axis[0, 1].plot(packCounter, velX, color = 'g',  
 #          marker = 'o', label='Y')
 # axis[0, 1].set_title("vel")
 
 
-# axis[1, 0].plot(packCounter, posY, color = 'g',  
+# axis[1, 0].plot(packCounter, posX, color = 'g',  
 #          marker = 'o', label='Y')
 # axis[1, 0].set_title("Pos")
  
-# axis[0, 0].set_xticks([0, 500, 1000, 1500, 2000])
-# axis[0, 1].set_xticks([0, 500, 1000, 1500, 2000])
-# axis[1, 0].set_xticks([0, 500, 1000, 1500, 2000])
+# axis[0, 0].set_xticks([0, 250, 500, 750, 1000, 1250, 1500])
+# axis[0, 1].set_xticks([0, 250, 500, 750, 1000, 1250, 1500])
+# axis[1, 0].set_xticks([0, 250, 500, 750, 1000, 1250, 1500])
 
 plt.xticks([0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000])  
-# plt.yticks([-1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1,-0.5,0,0.5,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])  
-# plt.plot(packCounter, faccY, color = 'g',  
-#          marker = 'o',label = "X") 
-# plt.plot(packCounter, velY, color = 'r', 
-#          marker = 'o',label = "Y") 
-# plt.plot(packCounter, posY, color = 'b', 
-#          marker = 'o',label = "Z") 
-plt.plot(packCounter, faccX, color = 'g',  
-         marker = 'o',label = "velX") 
+plt.yticks([-1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1,-0.5,0,0.5,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])  
+# plt.plot(packCounter, faccX, color = 'g',  
+#          marker = 'o',label = "faccX") 
+# plt.plot(packCounter, faccY, color = 'r', 
+#          marker = 'o',label = "faccY") 
+# plt.plot(packCounter, faccZ, color = 'b', 
+#          marker = 'o',label = "faccZ") 
+
+plt.plot(packCounter, accX, color = 'g',  
+         marker = 'o',label = "acc") 
 plt.plot(packCounter, velX, color = 'r', 
-         marker = 'o',label = "velX") 
+         marker = 'o',label = "vel") 
 plt.plot(packCounter, posX, color = 'b', 
-         marker = 'o',label = "posX") 
+         marker = 'o',label = "pos") 
 plt.grid() 
 plt.legend() 
 plt.show() 
