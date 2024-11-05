@@ -3,12 +3,15 @@
 import matplotlib.pyplot as plt
 import csv
 
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
 # csv file name
-filename = "d2a.csv"
+filename = "d28a.csv"
 
 f = 60
 delta_t = 1/f
-threadhold = 0.05
+threadhold = 0.06
 
 packCounter = [] 
 timeStamp = []
@@ -39,6 +42,8 @@ posX = []
 posY = []
 posZ = []
 
+isturn = []
+
 cur_posX = 0
 cur_posY = 0
 cur_posZ = 0
@@ -48,7 +53,10 @@ counterX = 0
 counterY = 0
 counterZ = 0
 sample = 8
+counter_turn = 0
+counter_forward = 0
 # i = []
+timer_wait_stable = 0
 
 # reading csv file
 with open(filename, 'r') as csvfile:
@@ -76,18 +84,14 @@ with open(filename, 'r') as csvfile:
                 counterX += 1
             else:
                 cur_accX = float(row[5])
-                counterX = 0
-
-            accX.append(cur_accX)
+                counterX = 0           
 
             if abs(float(row[6])) <= threadhold:
                 cur_accY = 0
                 counterY += 1
             else:
                 cur_accY = float(row[6])
-                counterY = 0
-
-            accY.append(cur_accY)
+                counterY = 0           
 
             if abs(float(row[7])-0.33) <= threadhold:
                 cur_accZ = 0
@@ -96,117 +100,163 @@ with open(filename, 'r') as csvfile:
                 cur_accZ = (float(row[7])-0.33)
                 counterZ = 0
 
-            accZ.append(cur_accZ)
+            if counterX >= sample:
+                cur_velX = 0
+            if counterY >= sample:
+                cur_velY = 0
+            if counterZ >= sample:
+                cur_velZ = 0
 
+            if int(eulerZ[counter-2]) != int(eulerZ[counter-1]):
+                counter_turn += 1
+                counter_forward = 0
+            else:
+                counter_forward += 1
+                if counter_forward >= 10:
+                    counter_turn = 0
+            if(counter_turn >= 40):
+                timer_wait_stable = 900
+                isturn.append(1)
+            else:
+                isturn.append(-1)
 
-        #     cur_posX += cur_velX*delta_t
-        #     cur_posY += cur_velY*delta_t
-        #     cur_posZ += cur_velZ*delta_t
+            if timer_wait_stable > 0:          
+                cur_accX = 0
+                cur_accY = 0
+                cur_accZ = 0
 
-        #     posX.append(cur_posX)
-        #     posY.append(cur_posY)
-        #     posZ.append(cur_posZ)
+                cur_velX = 0
+                cur_velY = 0
+                cur_velZ = 0
+
+                accX.append(0)
+                accY.append(0)
+                accZ.append(0)
+
+                velX.append(0)
+                velY.append(0)
+                velZ.append(0)
+                timer_wait_stable -= 1
+            else:
+                cur_velX += 0.5*(cur_accX + accX[counter-2])*delta_t
+                cur_velY += 0.5*(cur_accY + accY[counter-2])*delta_t
+                cur_velZ += 0.5*(cur_accZ + accZ[counter-2])*delta_t
+
+                cur_posX += 0.5*(cur_velX + velX[counter-2])*delta_t
+                cur_posY += 0.5*(cur_velY + velY[counter-2])*delta_t
+                cur_posZ += 0.5*(cur_velZ + velZ[counter-2])*delta_t   
+
+                accX.append(cur_accX)
+                accY.append(cur_accY)
+                accZ.append(cur_accZ)
+
+                velX.append(cur_velX)
+                velY.append(cur_velY)
+                velZ.append(cur_velZ)
+
+            # cur_velX += cur_accX*delta_t
+            # cur_velY += cur_accY*delta_t
+            # cur_velZ += cur_accZ*delta_t
+
+            # cur_posX += cur_velX*delta_t
+            # cur_posY += cur_velY*delta_t
+            # cur_posZ += cur_velZ*delta_t   
+            posX.append(cur_posX)
+            posY.append(cur_posY)
+            posZ.append(cur_posZ)
+            
         else:
+            isturn.append(-1)
             accX.append(0)
             accY.append(0)
             accZ.append(0)
-        #     velX.append(0)
-        #     velY.append(0)
-        #     velZ.append(0)
-        #     posX.append(0)
-        #     posY.append(0)
-        #     posZ.append(0)
-        if counterX >= sample:
-            cur_velX = 0
-        if counterY >= sample:
-            cur_velY = 0
-        if counterZ >= sample:
-            cur_velZ = 0
 
-        cur_velX += 0.5*cur_accX*delta_t
-        cur_velY += 0.5*cur_accY*delta_t
-        cur_velZ += 0.5*cur_accZ*delta_t
-
-        cur_posX += 0.5*cur_velX*delta_t
-        cur_posX += 0.5*cur_velX*delta_t
-        cur_posX += 0.5*cur_velX*delta_t
-
-        velX.append(cur_velX)
-        velY.append(cur_velY)
-        velZ.append(cur_velZ)
-
-        posX.append(cur_posX)
-        posY.append(cur_posY)
-        posZ.append(cur_posZ)
+            velX.append(0)
+            velY.append(0)
+            velZ.append(0)
+    
+            posX.append(0)
+            posY.append(0)
+            posZ.append(0)
         
-#     # extracting each data row one by one
-#     for row in csvreader:
-#         rows.append(row)
+       
 
-#     # get total number of rows
-#     print("Total no. of rows: %d" % (csvreader.line_num))
+ax.scatter(posX, posY, posZ, c='blue', marker = 'o')
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+# plt.show()
 
-# # printing the field names
-# print('Field names are:' + ', '.join(field for field in fields))
-
-# # printing first 5 rows
-# print('\nFirst 5 rows are:\n')
-# for row in rows[:5]:
-#     # parsing each column of a row
-#     for col in row:
-#         print("%10s" % col, end=" "),
-#     print('\n')
+figure, axis = plt.subplots(2, 2)
 
 
-# figure, axis = plt.subplots(2, 2)
+axis[0, 0].plot(packCounter, accX, color = 'g',  
+         marker = 'o', label='acc')
+axis[0, 0].plot(packCounter, isturn, color = 'r',  
+         marker = 'o', label='vel')
+# axis[0, 0].plot(packCounter, posX, color = 'b',  
+#          marker = 'o', label='pos')
+axis[0, 0].set_title("x")
 
 
-# axis[0, 0].plot(packCounter, accX, color = 'g',  
-#          marker = 'o', label='Y')
-# axis[0, 0].set_title("facc")
+axis[0, 1].plot(packCounter, accY, color = 'g',  
+         marker = 'o', label='acc')
+axis[0, 1].plot(packCounter, isturn, color = 'r',  
+         marker = 'o', label='vel')
+# axis[0, 1].plot(packCounter, posY, color = 'b',  
+#          marker = 'o', label='pos')
+axis[0, 1].set_title("y")
 
 
-# axis[0, 1].plot(packCounter, velX, color = 'g',  
-#          marker = 'o', label='Y')
-# axis[0, 1].set_title("vel")
+axis[1, 0].plot(packCounter, accZ, color = 'g',  
+         marker = 'o', label='acc')
+axis[1, 0].plot(packCounter, isturn, color = 'r',  
+         marker = 'o', label='vel')
+# axis[1, 0].plot(packCounter, posZ, color = 'b',  
+#          marker = 'o', label='pos')
+axis[1, 0].set_title("z")
 
-
-# axis[1, 0].plot(packCounter, posX, color = 'g',  
-#          marker = 'o', label='Y')
-# axis[1, 0].set_title("Pos")
+axis[1, 1].plot(packCounter, eulerZ, color = 'g',  
+         marker = 'o', label='x')
+axis[1, 1].plot(packCounter, posX, color = 'r',  
+         marker = 'o', label='y')
+axis[1, 1].plot(packCounter, posY, color = 'b',  
+         marker = 'o', label='z')
+axis[1, 1].plot(packCounter, isturn, color = 'm',  
+         marker = 'o', label='z')
+axis[1, 1].set_title("euler")
  
-# axis[0, 0].set_xticks([0, 250, 500, 750, 1000, 1250, 1500])
-# axis[0, 1].set_xticks([0, 250, 500, 750, 1000, 1250, 1500])
-# axis[1, 0].set_xticks([0, 250, 500, 750, 1000, 1250, 1500])
+axis[0, 0].set_xticks([0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000])
+axis[0, 1].set_xticks([0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000])
+axis[1, 0].set_xticks([0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000])
+axis[1, 1].set_xticks([0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000])
 
-plt.xticks([0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000])  
-plt.yticks([-1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1,-0.5,0,0.5,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])  
+axis[0, 0].set_yticks([-1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1,-0.5,0,0.5,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])
+axis[0, 1].set_yticks([-1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1,-0.5,0,0.5,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])
+axis[1, 0].set_yticks([-1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1,-0.5,0,0.5,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])
+
+# plt.xticks([0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000])  
+# plt.yticks([-1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1,-0.5,0,0.5,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])  
+# plt.plot(packCounter, eulerZ, color = 'm',  
+#          marker = 'o',label = "e")
 # plt.plot(packCounter, faccX, color = 'g',  
-#          marker = 'o',label = "faccX") 
-# plt.plot(packCounter, faccY, color = 'r', 
-#          marker = 'o',label = "faccY") 
-# plt.plot(packCounter, faccZ, color = 'b', 
-#          marker = 'o',label = "faccZ") 
+#          marker = 'o',label = "f") 
+# plt.plot(packCounter, velX, color = 'r', 
+#          marker = 'o',label = "v") 
+# plt.plot(packCounter, posX, color = 'b', 
+#          marker = 'o',label = "p") 
 
-plt.plot(packCounter, accX, color = 'g',  
-         marker = 'o',label = "acc") 
-plt.plot(packCounter, velX, color = 'r', 
-         marker = 'o',label = "vel") 
-plt.plot(packCounter, posX, color = 'b', 
-         marker = 'o',label = "pos") 
-plt.grid() 
-plt.legend() 
-plt.show() 
+# plt.plot(posX, posY, color = 'g',  
+#          marker = 'o',label = "acc") 
+# # plt.plot(packCounter, velZ, color = 'r', 
+# #          marker = 'o',label = "vel") 
+# # plt.plot(packCounter, posZ, color = 'b', 
+# #          marker = 'o',label = "pos") 
 
-# plt.xticks([0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000]) 
-# # plt.yticks([-200, -180, -150, -100, -50, 0, 50, 100, 150, 180, 200]) 
-# plt.yticks([-10, -8, -6, -4, -2, -1,-0.5,0,0.5,1,2,4,6,8,10])
-# plt.plot(a, g, color = 'g',  
-#          marker = 'o',label = "dvX") 
-# plt.plot(a, h, color = 'r', 
-#          marker = 'o',label = "dvY") 
-# plt.plot(a, i, color = 'b', 
-#          marker = 'o',label = "dvZ") 
+# plt.xlabel("x")
+# plt.ylabel("y")
 # plt.grid() 
 # plt.legend() 
-# plt.show() 
+plt.show() 
+
+ 
