@@ -1,2 +1,18 @@
-BLE_client/.pio/*
-BLE_client/.vscode/*
+# Ignore Python bytecode files
+__pycache__/
+*.pyc
+
+# Ignore logs
+*.log
+
+# Ignore virtual environments
+venv/
+env/
+
+# Ignore OS-generated files
+.DS_Store
+Thumbs.db
+
+# Ignore sensitive files
+*.env
+secret_key.txt
