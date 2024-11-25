@@ -1,6 +1,15 @@
 import simplepyble
 import threading
 import numpy as np
+import time
+
+# Initialize velocity and distance
+velocity_x = 0.0
+velocity_y = 0.0
+distance_x = 0.0
+distance_y = 0.0
+prev_time = time.time()
+
 
 bleServerName = "Movella DOT"
 
@@ -81,10 +90,22 @@ if __name__ == "__main__":
             faccX = convertData(notifyDatas, 4)
             faccY = convertData(notifyDatas, 5)
 
-            print(f"raw data: {notifyDatas}")
-            print(f"yaw: {yaw}")
-            print(f"faccX: {faccX}")
-            print(f"faccY: {faccY}")
+            current_time = time.time()
+            time_delta = current_time - prev_time
+            prev_time = current_time
+
+            # Integrate acceleration to update velocity
+            velocity_x += faccX * time_delta
+            velocity_y += faccY * time_delta
+
+            # Integrate velocity to update distance
+            distance_x += velocity_x * time_delta
+            distance_y += velocity_y * time_delta
+
+            print(f"Yaw: {yaw}")
+            print(f"faccX: {faccX}, faccY: {faccY}")
+            print(f"Velocity: ({velocity_x}, {velocity_y})")
+            print(f"Distance: ({distance_x}, {distance_y})")
 
    
     # Write the content to the characteristic
