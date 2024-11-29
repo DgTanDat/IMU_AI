@@ -107,7 +107,10 @@ class MotorDriver:
         # For simplicity, you can control GPIO pins directly for motor control
         
     def bit_write(self, bitIndex, signal):
-        self.latch_copy |= (signal & 1) * (1 << bitIndex)
+        if signal == 1:
+            self.latch_copy |=  (1 << bitIndex)
+        else:
+            self.latch_copy &= ~(1 << bitIndex)
 
     def shift_out(self):
         binValue = self.latch_copy
@@ -127,10 +130,31 @@ motor_driver = MotorDriver()
 
 # Drive motor 1 forward at speed 128 (50% PWM)
 motor_driver.motor(1, FORWARD, 100)
-motor_driver.motor(2, FORWARD, 100)
-motor_driver.motor(3, FORWARD, 100)
+motor_driver.motor(2, FORWARD, 50)
+motor_driver.motor(3, FORWARD, 50)
 motor_driver.motor(4, FORWARD, 100)
 
 
 time.sleep(10)
-    
+
+motor_driver.motor(1, BACKWARD, 100)
+motor_driver.motor(2, BACKWARD, 50)
+motor_driver.motor(3, BACKWARD, 50)
+motor_driver.motor(4, BACKWARD, 100)
+
+time.sleep(10)
+
+motor_driver.motor(1, BACKWARD, 100)
+motor_driver.motor(2, BACKWARD, 50)
+motor_driver.motor(3, FORWARD, 50)
+motor_driver.motor(4, FORWARD, 100)
+
+time.sleep(10)
+
+motor_driver.motor(1, FORWARD, 100)
+motor_driver.motor(2, FORWARD, 50)
+motor_driver.motor(3, BACKWARD, 50)
+motor_driver.motor(4, BACKWARD, 100)
+
+time.sleep(10)
+
