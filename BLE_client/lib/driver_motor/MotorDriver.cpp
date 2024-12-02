@@ -136,7 +136,8 @@ void MotorDriver :: motor_output (int output, int high_low, int speed)
     // set PWM only if it is valid
     if (speed >= 0 && speed <= 255)    
     {
-      digitalWrite(motorPWM, speed);
+      // digitalWrite(motorPWM, speed);
+      analogWrite(motorPWM, speed);
     }
   }
 }

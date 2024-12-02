@@ -249,6 +249,13 @@ void processNotifyTask(void *parameter) {
             statePN = GOSTRAIGHT;
           }
           else{
+            if(waitTime == 200){
+              std::uint8_t startMeasure[3];
+              startMeasure[0] = 1;
+              startMeasure[1] = 1;
+              startMeasure[2] = 16;
+              ctrlCharacteristic->writeValue(startMeasure, 3);
+            }
             statePN = STOP;
           }
           break;
@@ -280,7 +287,7 @@ void processNotifyTask(void *parameter) {
           positionX += 0.5*(lastVelX + curVelX)*delta_t;
           positionY += 0.5*(lastVelY + curVelY)*delta_t;
 
-          if(cal_distance(startPosX, startPosY, positionX, positionY) >= 0.7){
+          if(cal_distance(startPosX, startPosY, positionX, positionY) >= 0.4){
             brake();
             statePN = TURNRIGHT;
             startPosX = positionX;
@@ -291,13 +298,17 @@ void processNotifyTask(void *parameter) {
           }
           break;
         case TURNRIGHT:
-          if((angle_thread_low <= curYaw) && (curYaw <= angle_thread_high)){
+          if((angle_thread_low < curYaw) && (curYaw < angle_thread_high)){
             focusYaw = curYaw;
             angle_thread_high = cal_angle(focusYaw, -89);
             angle_thread_low = cal_angle(focusYaw, -91); 
             statePN = STOP; 
-            positionX = 0;
-            waitTime = 990;
+            // positionX = 0;
+            // positionY = 0;
+            std::uint8_t stopMeasure[3];
+            stopMeasure[0] = 0;
+            ctrlCharacteristic->writeValue(stopMeasure, 3);
+            waitTime = 240;
           }
           else{
             statePN = TURNRIGHT;
@@ -357,10 +368,10 @@ void stateProcessTask(void *parameter) {
             brake();
             break;
           case GOSTRAIGHT:
-            forward(250);
+            forward(200);
             break;
           case TURNRIGHT:
-            turnRight(80);
+            turnRight(255);
             break;
           default:
             stateSP = STOP;
@@ -387,15 +398,15 @@ void setup() {
   pBLEScan->setActiveScan(true);
   pBLEScan->start(30);
 
-  notifyQueue = xQueueCreate(10, sizeof(NotifyData)); 
-  stateQueue = xQueueCreate(10, sizeof(int));
-  lastStateQueue = xQueueCreate(10, sizeof(int));
+  notifyQueue = xQueueCreate(30, sizeof(NotifyData)); 
+  stateQueue = xQueueCreate(30, sizeof(int));
+  lastStateQueue = xQueueCreate(30, sizeof(int));
 
   xQueueSend(lastStateQueue, &initLastState, portMAX_DELAY);
 
   xTaskCreate(startXsenMeasurementTask, "startXsenMeasurementTask", 4000, NULL, 1, NULL);
-  xTaskCreate(processNotifyTask, "ProcessNotifyTask", 6000, NULL, 2, NULL);
-  xTaskCreate(stateProcessTask, "stateProcessTask", 6000, NULL, 2, NULL);
+  xTaskCreate(processNotifyTask, "ProcessNotifyTask", 6000, NULL, 1, NULL);
+  xTaskCreate(stateProcessTask, "stateProcessTask", 6000, NULL, 1, NULL);
 }
 
 

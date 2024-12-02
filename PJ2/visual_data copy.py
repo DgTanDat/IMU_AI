@@ -63,8 +63,6 @@ counter_forward = 0
 # i = []
 timer_wait_stable = 0
 
-def cal_distance(x0, y0, x1, y1):
-    return ((x0-x1)*(x0-x1) + (y0-y1)*(y0-y1))**(0.5)
 
 # reading csv file
 with open(filename, 'r') as csvfile:
@@ -198,7 +196,7 @@ ax.set_zlabel('Z')
 figure, axis = plt.subplots(2, 2)
 
 
-axis[0, 0].plot(packCounter, accX, color = 'g',  
+axis[0, 0].plot(packCounter, faccX, color = 'g',  
          marker = 'o', label='acc')
 axis[0, 0].plot(packCounter, isturn, color = 'r',  
          marker = 'o', label='vel')
@@ -207,7 +205,7 @@ axis[0, 0].plot(packCounter, isturn, color = 'r',
 axis[0, 0].set_title("x")
 
 
-axis[0, 1].plot(packCounter, accY, color = 'g',  
+axis[0, 1].plot(packCounter, faccY, color = 'g',  
          marker = 'o', label='acc')
 axis[0, 1].plot(packCounter, isturn, color = 'r',  
          marker = 'o', label='vel')
