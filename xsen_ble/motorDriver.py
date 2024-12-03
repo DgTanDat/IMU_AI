@@ -125,36 +125,36 @@ class MotorDriver:
             self.motor_clk.off()
 
 
-# Example of usage
-motor_driver = MotorDriver()
+# # # Example of usage
+# motor_driver = MotorDriver()
 
-# Drive motor 1 forward at speed 128 (50% PWM)
-motor_driver.motor(1, FORWARD, 100)
-motor_driver.motor(2, FORWARD, 50)
-motor_driver.motor(3, FORWARD, 50)
-motor_driver.motor(4, FORWARD, 100)
+# # Drive motor 1 forward at speed 128 (50% PWM)
+# motor_driver.motor(1, FORWARD, 100)
+# motor_driver.motor(2, FORWARD, 50)
+# motor_driver.motor(3, FORWARD, 50)
+# motor_driver.motor(4, FORWARD, 100)
 
 
-time.sleep(10)
+# time.sleep(10)
 
-motor_driver.motor(1, BACKWARD, 100)
-motor_driver.motor(2, BACKWARD, 50)
-motor_driver.motor(3, BACKWARD, 50)
-motor_driver.motor(4, BACKWARD, 100)
+# motor_driver.motor(1, BACKWARD, 100)
+# motor_driver.motor(2, BACKWARD, 50)
+# motor_driver.motor(3, BACKWARD, 50)
+# motor_driver.motor(4, BACKWARD, 100)
 
-time.sleep(10)
+# time.sleep(10)
 
-motor_driver.motor(1, BACKWARD, 100)
-motor_driver.motor(2, BACKWARD, 50)
-motor_driver.motor(3, FORWARD, 50)
-motor_driver.motor(4, FORWARD, 100)
+# motor_driver.motor(1, BACKWARD, 100)
+# motor_driver.motor(2, BACKWARD, 50)
+# motor_driver.motor(3, FORWARD, 50)
+# motor_driver.motor(4, FORWARD, 100)
 
-time.sleep(10)
+# time.sleep(10)
 
-motor_driver.motor(1, FORWARD, 100)
-motor_driver.motor(2, FORWARD, 50)
-motor_driver.motor(3, BACKWARD, 50)
-motor_driver.motor(4, BACKWARD, 100)
+# motor_driver.motor(1, FORWARD, 100)
+# motor_driver.motor(2, FORWARD, 50)
+# motor_driver.motor(3, BACKWARD, 50)
+# motor_driver.motor(4, BACKWARD, 100)
 
-time.sleep(10)
+# time.sleep(10)
 
