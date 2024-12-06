@@ -40,6 +40,11 @@ class MotorDriver:
         self.motor2_pwm = PWMOutputDevice(MOTOR2_PWM)
         self.motor3_pwm = PWMOutputDevice(MOTOR3_PWM)
         self.motor4_pwm = PWMOutputDevice(MOTOR4_PWM)
+
+        self.motor1_pwm.frequency = 1000
+        self.motor2_pwm.frequency = 1000
+        self.motor3_pwm.frequency = 50
+        self.motor4_pwm.frequency = 50
         
         # Initialize shift register pins (if applicable, modify as needed)
         self.motor_latch = DigitalOutputDevice(MOTORLATCH)
@@ -84,7 +89,7 @@ class MotorDriver:
         self.shift_write(output, high_low)
         if speed == -1:  # No PWM set
             self.pwm.off()
-        elif speed in range(0, 101):
+        if speed in range(0, 101):
             self.pwm.value = speed / 100.0  # Convert to a 0-1 scale for PWM
     
     def shift_write(self, output, high_low):
@@ -99,9 +104,9 @@ class MotorDriver:
         self.bit_write(output, high_low)
         
         self.shift_out()
-        time.sleep(5e-6)
+        time.sleep(1e-7)
         self.motor_latch.on()
-        time.sleep(5e-6)
+        time.sleep(1e-7)
         self.motor_latch.off()
         # Implement shift register control (if needed)
         # For simplicity, you can control GPIO pins directly for motor control
@@ -121,28 +126,29 @@ class MotorDriver:
             else:
                 self.motor_data.off()
             self.motor_clk.on()
-            time.sleep(1e-6)
+            time.sleep(1e-7)
             self.motor_clk.off()
+            time.sleep(1e-7)
 
 
 # # # Example of usage
 # motor_driver = MotorDriver()
 
 # # Drive motor 1 forward at speed 128 (50% PWM)
-# motor_driver.motor(1, FORWARD, 100)
-# motor_driver.motor(2, FORWARD, 50)
-# motor_driver.motor(3, FORWARD, 50)
-# motor_driver.motor(4, FORWARD, 100)
+# motor_driver.motor(1, BRAKE, 100)
+# motor_driver.motor(2, BRAKE, 100)
+# motor_driver.motor(3, BRAKE, 100)
+# motor_driver.motor(4, BRAKE, 100)
 
 
-# time.sleep(10)
+# time.sleep(1)
 
 # motor_driver.motor(1, BACKWARD, 100)
 # motor_driver.motor(2, BACKWARD, 50)
-# motor_driver.motor(3, BACKWARD, 50)
-# motor_driver.motor(4, BACKWARD, 100)
+# motor_driver.motor(3, BACKWARD, 25)
+# motor_driver.motor(4, BACKWARD, 0)
 
-# time.sleep(10)
+# time.sleep(20)
 
 # motor_driver.motor(1, BACKWARD, 100)
 # motor_driver.motor(2, BACKWARD, 50)

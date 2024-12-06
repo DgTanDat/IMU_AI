@@ -28,53 +28,49 @@ devicectrlCharacteristicUUID = "15171002-4947-11e9-8646-d663bd873d93"
 measureCtrlCharacteristicUUID = "15172001-4947-11e9-8646-d663bd873d93"
 medPayLoadCharacteristicUUID = "15172003-4947-11e9-8646-d663bd873d93"
 
-notifyQueue = Queue(maxsize = 60)
-stateQueue = Queue(maxsize = 60)
-lastStateQueue = Queue(maxsize = 60)
+notifyQueue = Queue(maxsize = 30)
+stateQueue = Queue(maxsize = 30)
+lastStateQueue = Queue(maxsize = 30)
+resetQueue = Queue(maxsize = 30)
 
 data = [
-    ['faccX', 'faccY', 'yaw'],
+    ['faccX', 'faccY', 'yaw', 'posX', 'posY', 'velX', 'velY'],
 ]
 
-def write_to_csv(filename, faccX, faccY, yaw):
+def write_to_csv(filename, faccX, faccY, yaw, posX, posY, velX, velY):
     with open(filename, mode='a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow([faccX, faccY, yaw])
+        writer.writerow([faccX, faccY, yaw, posX, posY, velX, velY])
 
 def turnLeft(speed):
     m.motor(1, BACKWARD, speed)
     m.motor(2, BACKWARD, speed)
     m.motor(3, FORWARD, speed)
     m.motor(4, FORWARD, speed)
-    print("motor tl")
 
 def turnRight(speed):
     m.motor(1, FORWARD, speed)
     m.motor(2, FORWARD, speed)
     m.motor(3, BACKWARD, speed)
     m.motor(4, BACKWARD, speed)
-    print("motor tr")
 
 def forward(speed):
     m.motor(1, FORWARD, speed)
     m.motor(2, FORWARD, speed)
     m.motor(3, FORWARD, speed)
     m.motor(4, FORWARD, speed)
-    print("motor fw")
 
 def backward(speed):
     m.motor(1, BACKWARD, speed)
     m.motor(2, BACKWARD, speed)
     m.motor(3, BACKWARD, speed)
     m.motor(4, BACKWARD, speed)
-    print("motor bw")
 
-def brake():
+def brake(): 
     m.motor(1, BRAKE, 0)
     m.motor(2, BRAKE, 0)
     m.motor(3, BRAKE, 0)
     m.motor(4, BRAKE, 0)
-    print("motor bk")
 
 def release():
     m.motor(1, RELEASE, 0)
@@ -160,6 +156,21 @@ def processNotifyTask(peripheral):
     while True:
         # if not lastStateQueue.empty() and notifyQueue.empty():
         #     if lastStateQueue.get() == STOP:
+        #         print("in stop phase")
+        #         waitTime -= 1
+        #         if waitTime <= 0:
+        #             statePN = GOSTRAIGHT
+        #             waitTime = 0
+        #         else:
+        #             if waitTime == 200:
+        #                 start_mess = b'\x01\x01\x10'
+        #                 peripheral.write_command(measurementServiceUUID, measureCtrlCharacteristicUUID, start_mess)
+        #                 text = peripheral.read(measurementServiceUUID, measureCtrlCharacteristicUUID)
+        #                 print(text)
+        #                 print(peripheral.is_connected())
+        #             statePN = STOP
+        #         stateQueue.put(statePN)
+        #         time.sleep(delta_t)
 
         if not notifyQueue.empty() and not lastStateQueue.empty():
             notifyDatas = notifyQueue.get()
@@ -167,17 +178,16 @@ def processNotifyTask(peripheral):
             curYaw = convertData(notifyDatas, 12)
             curFaccX = convertData(notifyDatas, 16)
             curFaccY = convertData(notifyDatas, 20)
-            print(curYaw)
-            print(curFaccX)
-            print(curFaccY)
-            write_to_csv('data_records.csv', curFaccX, curFaccY, curYaw)
+            # print(curYaw)
+            # print(curFaccX)
+            # print(curFaccY)
 
             if not haveInitYaw:
                 focusYaw = curYaw
                 haveInitYaw = True
                 angle_thread_high = cal_angle(focusYaw, -89)
                 angle_thread_low = cal_angle(focusYaw, -91)
-
+            
             if lastStatePN == STOP:
                 print("in stop phase")
                 waitTime -= 1
@@ -189,8 +199,8 @@ def processNotifyTask(peripheral):
                         start_mess = b'\x01\x01\x10'
                         peripheral.write_command(measurementServiceUUID, measureCtrlCharacteristicUUID, start_mess)
                         text = peripheral.read(measurementServiceUUID, measureCtrlCharacteristicUUID)
-                        print(text)
-                        print(peripheral.is_connected())
+                        # print(text)
+                        # print(peripheral.is_connected())
                     statePN = STOP
             elif lastStatePN == GOSTRAIGHT:
                 if curFaccX >= (-threadhold) and curFaccX <= threadhold:
@@ -222,7 +232,7 @@ def processNotifyTask(peripheral):
                     startPosY = positionY
                 else:
                     statePN = GOSTRAIGHT
-
+                
             elif lastStatePN == TURNRIGHT:
                 if curYaw > angle_thread_low and curYaw < angle_thread_high:
                     focusYaw = curYaw
@@ -230,23 +240,24 @@ def processNotifyTask(peripheral):
                     angle_thread_low = cal_angle(focusYaw, -91)
                     statePN = STOP
                     
-                    stop_mess = b'\x00\x00\x10'
+                    stop_mess = b'\x00\x01\x10'
                     peripheral.write_command(measurementServiceUUID, measureCtrlCharacteristicUUID, stop_mess)
                     text = peripheral.read(measurementServiceUUID, measureCtrlCharacteristicUUID)
-                    print(text)
-                    print(peripheral.is_connected())
+                    # print(text)
+                    # print(peripheral.is_connected())
                     waitTime = 240
                 else:
                     statePN = TURNRIGHT
             else:
                 statePN = GOSTRAIGHT
+            write_to_csv('data_records.csv', curFaccX, curFaccY, curYaw, positionX, positionY, curVelX, curVelY)
             stateQueue.put(statePN)
-            lastYaw = curYaw
+            # lastYaw = curYaw
             lastFaccX = curFaccX
             lastFaccY = curFaccY
             lastVelX = curVelX
             lastVelY = curVelY    
-        time.sleep(1e-6)
+        time.sleep(1e-7)
 
 def processStateTask():
     global NONE
@@ -262,16 +273,15 @@ def processStateTask():
                 if stateSP == STOP:
                     brake()
                 elif stateSP == GOSTRAIGHT:
-                    forward(100)
-                    print("run fw")
+                    forward(50)
                 elif stateSP == TURNRIGHT:
-                    turnRight(100)
+                    turnRight(45)
                 else:
                     stateSP = STOP
                     brake()
                 lastStateSP = stateSP
             lastStateQueue.put(lastStateSP)
-        time.sleep(1e-6)
+        time.sleep(1e-7)
 
 if __name__ == "__main__":
     with open('data_records.csv', 'w', newline='') as csvfile:
@@ -340,7 +350,7 @@ if __name__ == "__main__":
         pnotifyTask.start()
 
         while True:
-            time.sleep(1)
+            time.sleep(1e-7)
         
     except KeyboardInterrupt:
         print("Interrupted by user. Exiting.")
