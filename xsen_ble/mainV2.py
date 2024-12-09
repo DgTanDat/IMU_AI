@@ -1,4 +1,3 @@
-import math
 import threading
 import csv
 from motorDriver import *
@@ -6,6 +5,11 @@ import simplepyble
 import struct
 from queue import Queue
 import time
+from datetime import datetime
+
+directory = "/home/dat/xsen_ble"
+current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+filename = f"{current_datetime}.csv"
 
 m = MotorDriver()
 
@@ -18,7 +22,7 @@ NONE = -1
 
 freq = 60
 delta_t = 1/freq 
-packageCounter = 3*freq 
+packageCounter = 3.5*freq 
 count = 0
 
 configServiceUUID = "15171000-4947-11e9-8646-d663bd873d93"
@@ -84,7 +88,7 @@ def notifyProcess(data):
         notifyQueue.put(data)
     else:
         count += 1
-    print(count)
+    # print(count)
    
 def convertData(data, index):
     float_value = struct.unpack('<f', data[index:index+4])[0]
@@ -103,24 +107,8 @@ def cal_angle(angle, angular_turn):
             return float(-180 + gap)
 
 def cal_distance(x0, y0, x1, y1):
-    temp = math.sqrt((x0-x1)*(x0-x1) + (y0-y1)*(y0-y1))
+    temp = ((x0-x1)*(x0-x1) + (y0-y1)*(y0-y1))**(0.5)
     return temp
-
-def restartTask(peripheral):
-    global count
-    while True:
-        if not resetQueue.empty():
-            temp = resetQueue.get()
-            if temp == STOP:
-                time.sleep(0.5)
-                start_mess = b'\x01\x01\x10'
-                peripheral.write_command(measurementServiceUUID, measureCtrlCharacteristicUUID, start_mess)
-                text = peripheral.read(measurementServiceUUID, measureCtrlCharacteristicUUID)
-                print('restart done')
-                count = 0
-                lastStateQueue.put(GOSTRAIGHT)
-        time.sleep(1e-7)
-
 
 def processNotifyTask(peripheral):
     STABLE_THREADHOLD = 8
@@ -129,8 +117,9 @@ def processNotifyTask(peripheral):
     global GOSTRAIGHT 
     global TURNRIGHT
     global delta_t
+    global count
 
-    threadhold = 0.05
+    threadhold = 0.06
 
     statePN = NONE
     lastStatePN = NONE
@@ -170,25 +159,31 @@ def processNotifyTask(peripheral):
     lastVelY = 0
 
     while True:
-        # if not lastStateQueue.empty() and notifyQueue.empty():
-        #     if lastStateQueue.get() == STOP:
-        #         print("in stop phase")
-        #         waitTime -= 1
-        #         if waitTime <= 0:
-        #             statePN = GOSTRAIGHT
-        #             waitTime = 0
-        #         else:
-        #             if waitTime == 200:
-        #                 start_mess = b'\x01\x01\x10'
-        #                 peripheral.write_command(measurementServiceUUID, measureCtrlCharacteristicUUID, start_mess)
-        #                 text = peripheral.read(measurementServiceUUID, measureCtrlCharacteristicUUID)
-        #                 print(text)
-        #                 print(peripheral.is_connected())
-        #             statePN = STOP
-        #         stateQueue.put(statePN)
-        #         time.sleep(delta_t)
+        if (not lastStateQueue.empty()) and notifyQueue.empty():
+            temp = lastStateQueue.get()
+            if temp == STOP:
+                # print("in stop phase")
+                waitTime = waitTime - 1
+                if waitTime <= 0:
+                    statePN = GOSTRAIGHT
+                    # print('heher')
+                else:
+                    # print('no there')
+                    if waitTime == 300:
+                        start_mess = b'\x01\x01\x10'
+                        peripheral.write_command(measurementServiceUUID, measureCtrlCharacteristicUUID, start_mess)
+                        # text = peripheral.read(measurementServiceUUID, measureCtrlCharacteristicUUID)
+                        # print(text)
+                        # print(peripheral.is_connected())
+                        count = 0
+                    statePN = STOP
+                stateQueue.put(statePN)
+                time.sleep(0.01)
+            else:
+                lastStateQueue.put(temp)
+            
 
-        if not notifyQueue.empty() and not lastStateQueue.empty():
+        elif (not notifyQueue.empty()) and (not lastStateQueue.empty()):
             notifyDatas = notifyQueue.get()
             lastStatePN = lastStateQueue.get()
             curYaw = convertData(notifyDatas, 12)
@@ -203,22 +198,10 @@ def processNotifyTask(peripheral):
                 haveInitYaw = True
                 angle_thread_high = cal_angle(focusYaw, -89)
                 angle_thread_low = cal_angle(focusYaw, -91)
-
-            # if lastStatePN == STOP:
-            #     print("in stop phase")
-            #     waitTime -= 1
-            #     if waitTime <= 0:
-            #         statePN = GOSTRAIGHT
-            #         waitTime = 0
-            #     else:
-            #         if waitTime == 200:
-            #             start_mess = b'\x01\x01\x10'
-            #             peripheral.write_command(measurementServiceUUID, measureCtrlCharacteristicUUID, start_mess)
-            #             text = peripheral.read(measurementServiceUUID, measureCtrlCharacteristicUUID)
-            #             # print(text)
-            #             # print(peripheral.is_connected())
-            #         statePN = STOP
-            if lastStatePN == GOSTRAIGHT:
+            
+            if lastStatePN == STOP:
+                statePN = STOP
+            elif lastStatePN == GOSTRAIGHT:
                 if curFaccX >= (-threadhold) and curFaccX <= threadhold:
                     curFaccX = 0
                     counterX += 1
@@ -240,8 +223,9 @@ def processNotifyTask(peripheral):
 
                 positionX += 0.5*(lastVelX + curVelX)*delta_t
                 positionY += 0.5*(lastVelY + curVelY)*delta_t
-
-                if cal_distance(startPosX, startPosY, positionX, positionY) >= 0.4:
+                distance = cal_distance(startPosX, startPosY, positionX, positionY)
+                # print("distance: %f", distance)
+                if distance >= 0.4:
                     brake()
                     statePN = TURNRIGHT
                     startPosX = positionX
@@ -252,28 +236,32 @@ def processNotifyTask(peripheral):
             elif lastStatePN == TURNRIGHT:
                 if curYaw > angle_thread_low and curYaw < angle_thread_high:
                     focusYaw = curYaw
-                    angle_thread_high = cal_angle(focusYaw, -89)
+                    angle_thread_high = cal_angle(focusYaw, -88)
                     angle_thread_low = cal_angle(focusYaw, -91)
                     statePN = STOP
                     
-                    stop_mess = b'\x00\x01\x10'
+                    stop_mess = b'\x01\x00\x10'
                     peripheral.write_command(measurementServiceUUID, measureCtrlCharacteristicUUID, stop_mess)
-                    text = peripheral.read(measurementServiceUUID, measureCtrlCharacteristicUUID)
-                    # print(text)
-                    # print(peripheral.is_connected())
-                    # waitTime = 240
-                    resetQueue.put(statePN)
+        
+                    waitTime = 400
                 else:
                     statePN = TURNRIGHT
-
-            write_to_csv('data_records.csv', curFaccX, curFaccY, curYaw, positionX, positionY, curVelX, curVelY)
+            else:
+                statePN = GOSTRAIGHT
+            write_to_csv(f"{directory}/{filename}", curFaccX, curFaccY, curYaw, positionX, positionY, curVelX, curVelY)
             stateQueue.put(statePN)
-            # lastYaw = curYaw
+            # print("faccX: %f", curFaccX)
+            # print("faccY: %f", curFaccY)
+            # print("velX: %f", curFaccX)
+            # print("velY: %f", curFaccY)
+            # print("posX: %f", curFaccX)
+            # print("posY: %f", curFaccY)
+            lastYaw = curYaw
             lastFaccX = curFaccX
             lastFaccY = curFaccY
             lastVelX = curVelX
             lastVelY = curVelY    
-        time.sleep(1e-7)
+        time.sleep(1e-6)
 
 def processStateTask():
     global NONE
@@ -289,18 +277,18 @@ def processStateTask():
                 if stateSP == STOP:
                     brake()
                 elif stateSP == GOSTRAIGHT:
-                    forward(50)
+                    forward(45)
                 elif stateSP == TURNRIGHT:
-                    turnRight(45)
+                    turnRight(55)
                 else:
                     stateSP = STOP
                     brake()
                 lastStateSP = stateSP
             lastStateQueue.put(lastStateSP)
-        time.sleep(1e-7)
+        time.sleep(1e-6)
 
 if __name__ == "__main__":
-    with open('data_records.csv', 'w', newline='') as csvfile:
+    with open(f"{directory}/{filename}", 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerows(data)
 
@@ -350,8 +338,8 @@ if __name__ == "__main__":
         print(text)
         start_mess = b'\x01\x01\x10'
         peripheral.write_command(measurementServiceUUID, measureCtrlCharacteristicUUID, start_mess)
-        text = peripheral.read(measurementServiceUUID, measureCtrlCharacteristicUUID)
-        print(text)
+        # text = peripheral.read(measurementServiceUUID, measureCtrlCharacteristicUUID)
+        # print(text)
         lastStateQueue.put(GOSTRAIGHT)
     except RuntimeError as e:
         print(f"Error starting notifications: {e}")
@@ -361,14 +349,12 @@ if __name__ == "__main__":
     try:
         pstateTask = threading.Thread(target=processStateTask)
         pnotifyTask = threading.Thread(target=processNotifyTask, args=(peripheral,))
-        prestartTask = threading.Thread(target=restartTask, args=(peripheral,))
     
         pstateTask.start()
         pnotifyTask.start()
-        prestartTask.start()
 
         while True:
-            time.sleep(1e-7)
+            time.sleep(1e-6)
         
     except KeyboardInterrupt:
         print("Interrupted by user. Exiting.")

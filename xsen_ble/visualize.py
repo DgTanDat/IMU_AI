@@ -7,7 +7,7 @@ import csv
 # ax = fig.add_subplot(111, projection='3d')
 
 # csv file name
-filename = "data_records.csv"
+filename = "record2.csv"
 
 f = 60
 delta_t = 1/f
@@ -37,6 +37,8 @@ cur_velY = 0
 
 rposX = []
 rposY = []
+rvelX = []
+rvelY = []
 
 posX = []
 posY = []
@@ -81,6 +83,8 @@ with open(filename, 'r') as csvfile:
         yaw.append(float(row[2]))
         rposX.append(float(row[3]))
         rposY.append(float(row[4]))
+        rvelX.append(float(row[5]))
+        rvelY.append(float(row[6]))
         counter = counter+1
 
         if counter >= step:
@@ -206,7 +210,7 @@ axis[1, 0].set_title("rPos")
 # axis[1, 0].set_xlabel('x')
 # axis[1, 0].set_ylabel('y')
 
-axis[1, 1].plot(range(len(yaw)), yaw, color = 'g',  
+axis[1, 1].plot(posX, posY, color = 'g',  
          marker = 'o', label='x')
 # axis[1, 1].plot(packCounter, posX, color = 'r',  
 #          marker = 'o', label='y')
@@ -214,9 +218,9 @@ axis[1, 1].plot(range(len(yaw)), yaw, color = 'g',
 #          marker = 'o', label='z')
 # axis[1, 1].plot(packCounter, isturn, color = 'm',  
 #          marker = 'o', label='z')
-axis[1, 1].set_title("pos")
-axis[1, 1].set_xlabel('x')
-axis[1, 1].set_ylabel('y')
+axis[1, 1].set_title("yaw")
+# axis[1, 1].set_xlabel('x')
+# axis[1, 1].set_ylabel('y')
  
 # axis[0, 0].set_xticks([0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000])
 # axis[0, 1].set_xticks([0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000])
