@@ -22,7 +22,7 @@ NONE = -1
 
 freq = 60
 delta_t = 1/freq 
-packageCounter = 3.5*freq 
+packageCounter = 3*freq 
 count = 0
 
 configServiceUUID = "15171000-4947-11e9-8646-d663bd873d93"
@@ -84,6 +84,7 @@ def release():
 
 def notifyProcess(data):
     global count 
+    global packageCounter
     if count >= packageCounter:
         notifyQueue.put(data)
     else:
@@ -119,7 +120,7 @@ def processNotifyTask(peripheral):
     global delta_t
     global count
 
-    threadhold = 0.06
+    threadhold = 0.05
 
     statePN = NONE
     lastStatePN = NONE
@@ -172,8 +173,8 @@ def processNotifyTask(peripheral):
             if not haveInitYaw:
                 focusYaw = curYaw
                 haveInitYaw = True
-                angle_thread_high = cal_angle(focusYaw, -89)
-                angle_thread_low = cal_angle(focusYaw, -91)
+                angle_thread_high = cal_angle(focusYaw, -87)
+                angle_thread_low = cal_angle(focusYaw, -90)
             
             if lastStatePN == STOP:
                 waitTime = waitTime - 1
@@ -221,13 +222,13 @@ def processNotifyTask(peripheral):
                 if curYaw > angle_thread_low and curYaw < angle_thread_high:
                     focusYaw = curYaw
                     angle_thread_high = cal_angle(focusYaw, -87)
-                    angle_thread_low = cal_angle(focusYaw, -91)
+                    angle_thread_low = cal_angle(focusYaw, -90)
                     statePN = STOP
                     
                     # stop_mess = b'\x00\x01\x10'
                     # peripheral.write_command(measurementServiceUUID, measureCtrlCharacteristicUUID, stop_mess)
         
-                    waitTime = 900
+                    waitTime = 90
                 else:
                     statePN = TURNRIGHT
             else:

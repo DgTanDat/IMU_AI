@@ -7,7 +7,7 @@ import csv
 # ax = fig.add_subplot(111, projection='3d')
 
 # csv file name
-filename = "record2.csv"
+filename = "record9.csv"
 
 f = 60
 delta_t = 1/f
@@ -184,19 +184,20 @@ figure, axis = plt.subplots(2, 2)
 
 axis[0, 0].plot(range(len(faccX)), accX, color = 'g',  
          marker = 'o', label='acc')
-# axis[0, 0].plot(packCounter, isturn, color = 'r',  
-#          marker = 'o', label='vel')
-# axis[0, 0].plot(packCounter, posX, color = 'b',  
-#          marker = 'o', label='pos')
+axis[0, 0].plot(range(len(rvelX)), rvelX, color = 'r',  
+         marker = 'o', label='vel')
+axis[0, 0].plot(range(len(rposX)), rposX, color = 'b',  
+         marker = 'o', label='pos')
 axis[0, 0].set_title("x")
+axis[0, 0].legend()
 
 
 axis[0, 1].plot(range(len(faccY)), accY, color = 'g',  
          marker = 'o', label='acc')
-# axis[0, 1].plot(packCounter, isturn, color = 'r',  
-#          marker = 'o', label='vel')
-# axis[0, 1].plot(packCounter, posY, color = 'b',  
-#          marker = 'o', label='pos')
+axis[0, 1].plot(range(len(rvelY)), rvelY, color = 'r',  
+         marker = 'o', label='vel')
+axis[0, 1].plot(range(len(rposY)), rposY, color = 'b',  
+         marker = 'o', label='pos')
 axis[0, 1].set_title("y")
 
 
@@ -210,7 +211,7 @@ axis[1, 0].set_title("rPos")
 # axis[1, 0].set_xlabel('x')
 # axis[1, 0].set_ylabel('y')
 
-axis[1, 1].plot(posX, posY, color = 'g',  
+axis[1, 1].plot(range(len(yaw)), yaw, color = 'g',  
          marker = 'o', label='x')
 # axis[1, 1].plot(packCounter, posX, color = 'r',  
 #          marker = 'o', label='y')
