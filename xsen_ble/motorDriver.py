@@ -43,8 +43,8 @@ class MotorDriver:
 
         self.motor1_pwm.frequency = 1000
         self.motor2_pwm.frequency = 1000
-        self.motor3_pwm.frequency = 50
-        self.motor4_pwm.frequency = 50
+        self.motor3_pwm.frequency = 1000
+        self.motor4_pwm.frequency = 1000
         
         # Initialize shift register pins (if applicable, modify as needed)
         self.motor_latch = DigitalOutputDevice(MOTORLATCH)
@@ -144,9 +144,9 @@ class MotorDriver:
 # time.sleep(1)
 
 # motor_driver.motor(1, BACKWARD, 100)
-# motor_driver.motor(2, BACKWARD, 50)
-# motor_driver.motor(3, BACKWARD, 25)
-# motor_driver.motor(4, BACKWARD, 0)
+# motor_driver.motor(2, BACKWARD, 100)
+# motor_driver.motor(3, BACKWARD, 100)
+# motor_driver.motor(4, BACKWARD, 100)
 
 # time.sleep(20)
 

@@ -1,24 +1,28 @@
-import csv 
-import random
+import requests
+import json
 
-data = [
-    ['timeStamp', 'facc', 'yaw', 'roll'],
-]
+# Firebase database URL (replace with your own URL)
+DATABASE_URL = "https://imucar-default-rtdb.asia-southeast1.firebasedatabase.app/"
 
-def write_to_csv(filename, timestamp, facc, yaw, roll):
-    with open(filename, mode='a', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([timestamp, facc, yaw, roll])
+# Node to access (e.g., "users.json")
+NODE = "instruction.json"
 
-line_data = []
+# Optional: Auth token or API key if required
+AUTH = "'AIzaSyAJ9NWzrhKBnos2XqpvJes507JcA_sgMog'"
 
-with open('university_records.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerows(data)
+# Construct the URL
+url = f"{DATABASE_URL}/{NODE}?auth={AUTH}"  # Add `?auth=` only if auth is required
 
+# Send GET request
+response = requests.get(url)
 
-for i in range(0, 10):
-    temp  = random.randint(0,10)
-    write_to_csv('university_records.csv',temp, temp, temp, temp)
+# Handle the response
+if response.status_code == 200:
+    datas = response.json()
+    print("Data retrieved successfully:", datas)
+    print(type(datas))
+else:
+    print("Failed to retrieve data. HTTP Status Code:", response.status_code)
+    print("Error message:", response.text)
 
 

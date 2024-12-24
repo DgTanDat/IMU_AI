@@ -112,7 +112,7 @@ def cal_distance(x0, y0, x1, y1):
     return temp
 
 def processNotifyTask(peripheral):
-    STABLE_THREADHOLD = 8
+    STABLE_THREADHOLD = 4
     global NONE
     global STOP 
     global GOSTRAIGHT 
@@ -120,7 +120,8 @@ def processNotifyTask(peripheral):
     global delta_t
     global count
 
-    threadhold = 0.05
+    low_threadhold = -0.05
+    high_threadhold = 0.05
 
     statePN = NONE
     lastStatePN = NONE
@@ -173,7 +174,7 @@ def processNotifyTask(peripheral):
             if not haveInitYaw:
                 focusYaw = curYaw
                 haveInitYaw = True
-                angle_thread_high = cal_angle(focusYaw, -87)
+                angle_thread_high = cal_angle(focusYaw, -88)
                 angle_thread_low = cal_angle(focusYaw, -90)
             
             if lastStatePN == STOP:
@@ -187,12 +188,12 @@ def processNotifyTask(peripheral):
 
                     statePN = STOP
             elif lastStatePN == GOSTRAIGHT:
-                if curFaccX >= (-threadhold) and curFaccX <= threadhold:
+                if abs(curFaccX) <= high_threadhold: #curFaccX >= (low_threadhold) and
                     curFaccX = 0
                     counterX += 1
                 else:
                     counterX = 0
-                if curFaccY >= (-threadhold) and curFaccY <= threadhold:
+                if abs(curFaccY) <= high_threadhold: #curFaccY >= (low_threadhold) and 
                     curFaccY = 0
                     counterY += 1
                 else:
@@ -219,16 +220,16 @@ def processNotifyTask(peripheral):
                     statePN = GOSTRAIGHT
                 
             elif lastStatePN == TURNRIGHT:
-                if curYaw > angle_thread_low and curYaw < angle_thread_high:
+                if curYaw >= angle_thread_low and curYaw <= angle_thread_high:
                     focusYaw = curYaw
-                    angle_thread_high = cal_angle(focusYaw, -87)
+                    angle_thread_high = cal_angle(focusYaw, -88)
                     angle_thread_low = cal_angle(focusYaw, -90)
                     statePN = STOP
                     
                     # stop_mess = b'\x00\x01\x10'
                     # peripheral.write_command(measurementServiceUUID, measureCtrlCharacteristicUUID, stop_mess)
         
-                    waitTime = 90
+                    waitTime = 30
                 else:
                     statePN = TURNRIGHT
             else:
@@ -264,7 +265,7 @@ def processStateTask():
                 elif stateSP == GOSTRAIGHT:
                     forward(45)
                 elif stateSP == TURNRIGHT:
-                    turnRight(55)
+                    turnRight(50)
                 else:
                     stateSP = STOP
                     brake()

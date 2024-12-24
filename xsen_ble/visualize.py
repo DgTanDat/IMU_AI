@@ -85,90 +85,40 @@ with open(filename, 'r') as csvfile:
         rposY.append(float(row[4]))
         rvelX.append(float(row[5]))
         rvelY.append(float(row[6]))
-        counter = counter+1
-
-        if counter >= step:
-            if abs(float(row[0])) <= threadhold:
-                cur_accX = 0
-                counterX += 1
-            else:
-                cur_accX = float(row[0])
-                counterX = 0           
-
-            if abs(float(row[1])) <= threadhold:
-                cur_accY = 0
-                counterY += 1
-            else:
-                cur_accY = float(row[1])
-                counterY = 0    
-
-            if counterX >= sample:
-                cur_velX = 0
-            if counterY >= sample:
-                cur_velY = 0
-
-            if int(yaw[counter-2]) != int(yaw[counter-1]):
-                counter_turn += 1
-                counter_forward = 0
-            else:
-                counter_forward += 1
-                if counter_forward >= 10:
-                    counter_turn = 0
-            if(counter_turn >= 40):
-                timer_wait_stable = 240
-                isturn.append(1)
-            else:
-                isturn.append(-1)
-
-            if timer_wait_stable > 0:          
-                cur_accX = 0
-                cur_accY = 0
-
-                cur_velX = 0
-                cur_velY = 0
-
-                accX.append(0)
-                accY.append(0)
-
-                velX.append(0)
-                velY.append(0)
-
-                timer_wait_stable -= 1
-            else:
-                cur_velX += 0.5*(cur_accX + accX[counter-2])*delta_t
-                cur_velY += 0.5*(cur_accY + accY[counter-2])*delta_t
-
-                cur_posX += 0.5*(cur_velX + velX[counter-2])*delta_t
-                cur_posY += 0.5*(cur_velY + velY[counter-2])*delta_t
-    
-                accX.append(cur_accX)
-                accY.append(cur_accY)
-
-                velX.append(cur_velX)
-                velY.append(cur_velY)
-
-            # cur_velX += cur_accX*delta_t
-            # cur_velY += cur_accY*delta_t
-            # cur_velZ += cur_accZ*delta_t
-
-            # cur_posX += cur_velX*delta_t
-            # cur_posY += cur_velY*delta_t
-            # cur_posZ += cur_velZ*delta_t   
-            posX.append(cur_posX)
-            posY.append(cur_posY)
-            
-        else:
-            isturn.append(-1)
-            accX.append(0)
-            accY.append(0)
-           
-
-            velX.append(0)
-            velY.append(0)
-            
-    
-            posX.append(0)
-            posY.append(0)
+       
+        # if abs(float(row[0])) <= threadhold:
+        #     cur_accX = 0
+        #     counterX += 1
+        # else:
+        #     cur_accX = float(row[0])
+        #     counterX = 0           
+        # if abs(float(row[1])) <= threadhold:
+        #     cur_accY = 0
+        #     counterY += 1
+        # else:
+        #     cur_accY = float(row[1])
+        #     counterY = 0    
+        # if counterX >= sample:
+        #     cur_velX = 0
+        # if counterY >= sample:
+        #     cur_velY = 0
+        
+        # cur_velX += 0.5*(cur_accX + accX[counter-2])*delta_t
+        # cur_velY += 0.5*(cur_accY + accY[counter-2])*delta_t
+        # cur_posX += 0.5*(cur_velX + velX[counter-2])*delta_t
+        # cur_posY += 0.5*(cur_velY + velY[counter-2])*delta_t
+        # accX.append(cur_accX)
+        # accY.append(cur_accY)
+        # velX.append(cur_velX)
+        # velY.append(cur_velY)
+        # # cur_velX += cur_accX*delta_t
+        # # cur_velY += cur_accY*delta_t
+        # # cur_velZ += cur_accZ*delta_t
+        # # cur_posX += cur_velX*delta_t
+        # # cur_posY += cur_velY*delta_t
+        # # cur_posZ += cur_velZ*delta_t   
+        # posX.append(cur_posX)
+        # posY.append(cur_posY)
             
         
        
@@ -182,7 +132,7 @@ with open(filename, 'r') as csvfile:
 figure, axis = plt.subplots(2, 2)
 
 
-axis[0, 0].plot(range(len(faccX)), accX, color = 'g',  
+axis[0, 0].plot(range(len(faccX)), faccX, color = 'g',  
          marker = 'o', label='acc')
 axis[0, 0].plot(range(len(rvelX)), rvelX, color = 'r',  
          marker = 'o', label='vel')
@@ -192,7 +142,7 @@ axis[0, 0].set_title("x")
 axis[0, 0].legend()
 
 
-axis[0, 1].plot(range(len(faccY)), accY, color = 'g',  
+axis[0, 1].plot(range(len(faccY)), faccY, color = 'g',  
          marker = 'o', label='acc')
 axis[0, 1].plot(range(len(rvelY)), rvelY, color = 'r',  
          marker = 'o', label='vel')
